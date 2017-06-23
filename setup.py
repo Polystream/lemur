@@ -62,7 +62,8 @@ install_requires = [
     'retrying==1.3.3',
     'tabulate==0.7.7',
     'pem==16.1.0',
-    'paramiko==2.2.1'  # required for lemur_linuxdst plugin
+    'paramiko==2.2.1',  # required for lemur_linuxdst plugin
+    'azure-mgmt-dns==1.0.1'
 ]
 
 tests_require = [

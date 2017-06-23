@@ -27,7 +27,7 @@ from lemur.common.utils import validate_conf
 from lemur.plugins.bases import IssuerPlugin
 from lemur.plugins import lemur_acme as acme
 
-from .route53 import delete_txt_record, create_txt_record, wait_for_r53_change
+from .azuredns import delete_txt_record, create_txt_record, wait_for_dns_change, create_dns_client
 
 
 def find_dns_challenge(authz):
@@ -67,7 +67,7 @@ def start_dns_challenge(acme_client, account_number, host):
 
 
 def complete_dns_challenge(acme_client, account_number, authz_record):
-    wait_for_r53_change(authz_record.change_id, account_number=account_number)
+    wait_for_dns_change(authz_record.change_id, account_number=account_number)
 
     response = authz_record.dns_challenge.response(acme_client.key)
 
@@ -190,6 +190,7 @@ class ACMEIssuerPlugin(IssuerPlugin):
         """
         current_app.logger.debug("Requesting a new acme certificate: {0}".format(issuer_options))
         acme_client, registration = setup_acme_client()
+        dns_client = create_dns_client("", "", "", "")
         account_number = current_app.config.get('ACME_AWS_ACCOUNT_NUMBER')
         domains = get_domains(issuer_options)
         authorizations = get_authorizations(acme_client, account_number, domains)
