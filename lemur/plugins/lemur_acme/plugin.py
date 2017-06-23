@@ -67,8 +67,6 @@ def start_dns_challenge(acme_client, account_number, host):
 
 
 def complete_dns_challenge(acme_client, account_number, authz_record):
-    wait_for_dns_change(authz_record.change_id, account_number=account_number)
-
     response = authz_record.dns_challenge.response(acme_client.key)
 
     verified = response.simple_verify(
@@ -117,7 +115,7 @@ def setup_acme_client():
     client = Client(directory_url, key)
 
     registration = client.register(
-        messages.NewRegistration.from_data(email=email)
+        messages.NewRegistration.from_data( =email)
     )
 
     client.agree_to_tos(registration)
@@ -173,7 +171,10 @@ class ACMEIssuerPlugin(IssuerPlugin):
             'ACME_DIRECTORY_URL',
             'ACME_TEL',
             'ACME_EMAIL',
-            'ACME_AWS_ACCOUNT_NUMBER',
+            'ACME_AZURE_TENANT_ID',
+            'ACME_AZURE_CLIENT',
+            'ACME_AZURE_KEY',
+            'ACME_AZURE_SUBSCRIPTION_ID',
             'ACME_ROOT'
         ]
 
@@ -190,8 +191,7 @@ class ACMEIssuerPlugin(IssuerPlugin):
         """
         current_app.logger.debug("Requesting a new acme certificate: {0}".format(issuer_options))
         acme_client, registration = setup_acme_client()
-        dns_client = create_dns_client("", "", "", "")
-        account_number = current_app.config.get('ACME_AWS_ACCOUNT_NUMBER')
+        dns_client = create_dns_client(current_app.config.get('ACME_AZURE_TENANT_ID'), current_app.config.get('ACME_AZURE_CLIENT'), current_app.config.get('ACME_AZURE_KEY'), current_app.config.get('ACME_AZURE_SUBSCRIPTION_ID'))
         domains = get_domains(issuer_options)
         authorizations = get_authorizations(acme_client, account_number, domains)
         pem_certificate, pem_certificate_chain = request_certificate(acme_client, authorizations, csr)
