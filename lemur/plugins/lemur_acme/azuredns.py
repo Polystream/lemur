@@ -30,5 +30,5 @@ def delete_txt_record(change_id, account_number, host, value):
 def create_txt_record(account_number, host, value):
     current_app.logger.debug("Create record")
 
-def wait_for_r53_change(change_id, client=None):
+def wait_for_dns_change(change_id, client=None):
     current_app.logger.debug("Wait")
