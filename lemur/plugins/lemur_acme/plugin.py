@@ -27,7 +27,7 @@ from lemur.common.utils import validate_conf
 from lemur.plugins.bases import IssuerPlugin
 from lemur.plugins import lemur_acme as acme
 
-from .azuredns import delete_txt_record, create_txt_record, wait_for_dns_change, create_dns_client
+from .azuredns import delete_txt_record, create_txt_record, create_dns_client
 
 
 def find_dns_challenge(authz):
@@ -47,15 +47,16 @@ class AuthorizationRecord(object):
         self.change_id = change_id
 
 
-def start_dns_challenge(acme_client, account_number, host):
+def start_dns_challenge(acme_client, host, dns_client, resource_group):
     authz = acme_client.request_domain_challenges(host)
 
     [dns_challenge] = find_dns_challenge(authz)
 
     change_id = create_txt_record(
+        dns_client,
+        resource_group,
         dns_challenge.validation_domain_name(host),
-        dns_challenge.validation(acme_client.key),
-        account_number
+        dns_challenge.validation(acme_client.key)
     )
 
     return AuthorizationRecord(
@@ -66,7 +67,7 @@ def start_dns_challenge(acme_client, account_number, host):
     )
 
 
-def complete_dns_challenge(acme_client, account_number, authz_record):
+def complete_dns_challenge(acme_client, authz_record):
     response = authz_record.dns_challenge.response(acme_client.key)
 
     verified = response.simple_verify(
@@ -115,7 +116,7 @@ def setup_acme_client():
     client = Client(directory_url, key)
 
     registration = client.register(
-        messages.NewRegistration.from_data( =email)
+        messages.NewRegistration.from_data(email=email)
     )
 
     client.agree_to_tos(registration)
@@ -135,23 +136,22 @@ def get_domains(options):
     return domains
 
 
-def get_authorizations(acme_client, account_number, domains):
+def get_authorizations(acme_client, domains, dns_client, resource_group):
     authorizations = []
     try:
         for domain in domains:
-            authz_record = start_dns_challenge(acme_client, account_number, domain)
+            authz_record = start_dns_challenge(acme_client, domain, dns_client, resource_group)
             authorizations.append(authz_record)
 
         for authz_record in authorizations:
-            complete_dns_challenge(acme_client, account_number, authz_record)
+            complete_dns_challenge(acme_client, authz_record)
     finally:
         for authz_record in authorizations:
             dns_challenge = authz_record.dns_challenge
             delete_txt_record(
-                authz_record.change_id,
-                account_number,
-                dns_challenge.validation_domain_name(authz_record.host),
-                dns_challenge.validation(acme_client.key)
+                dns_client,
+                resource_group,
+                dns_challenge.validation_domain_name(authz_record.host)
             )
 
     return authorizations
@@ -175,6 +175,7 @@ class ACMEIssuerPlugin(IssuerPlugin):
             'ACME_AZURE_CLIENT',
             'ACME_AZURE_KEY',
             'ACME_AZURE_SUBSCRIPTION_ID',
+            'ACME_AZURE_RESOURCE_GROUP',
             'ACME_ROOT'
         ]
 
@@ -193,7 +194,7 @@ class ACMEIssuerPlugin(IssuerPlugin):
         acme_client, registration = setup_acme_client()
         dns_client = create_dns_client(current_app.config.get('ACME_AZURE_TENANT_ID'), current_app.config.get('ACME_AZURE_CLIENT'), current_app.config.get('ACME_AZURE_KEY'), current_app.config.get('ACME_AZURE_SUBSCRIPTION_ID'))
         domains = get_domains(issuer_options)
-        authorizations = get_authorizations(acme_client, account_number, domains)
+        authorizations = get_authorizations(acme_client, domains, dns_client, current_app.config.get('ACME_AZURE_RESOURCE_GROUP'))
         pem_certificate, pem_certificate_chain = request_certificate(acme_client, authorizations, csr)
         return pem_certificate, pem_certificate_chain
 
