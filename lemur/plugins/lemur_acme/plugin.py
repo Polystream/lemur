@@ -207,4 +207,5 @@ class ACMEIssuerPlugin(IssuerPlugin):
         :return:
         """
         role = {'username': '', 'password': '', 'name': 'acme'}
+        current_app.logger.debug("Creating autority: {0}".format(current_app.config.get('ACME_ROOT')))
         return current_app.config.get('ACME_ROOT'), "", [role]
