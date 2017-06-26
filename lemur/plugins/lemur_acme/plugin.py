@@ -191,6 +191,7 @@ class ACMEIssuerPlugin(IssuerPlugin):
         :return: :raise Exception:
         """
         current_app.logger.debug("Requesting a new acme certificate: {0}".format(issuer_options))
+        current_app.logger.debug("CSR: {0}".format(csr))
         acme_client, registration = setup_acme_client()
         dns_client = create_dns_client(current_app.config.get('ACME_AZURE_TENANT_ID'), current_app.config.get('ACME_AZURE_CLIENT'), current_app.config.get('ACME_AZURE_KEY'), current_app.config.get('ACME_AZURE_SUBSCRIPTION_ID'))
         domains = get_domains(issuer_options)
