@@ -39,7 +39,7 @@ def delete_txt_record(client, resource_group, host):
         raise ValueError(
             "Unable to find a Azure DNS hosted zone for {}".format(host)
         )
-    relative_name = host.replace(dns_zone.name + ".", "")
+    relative_name = host.replace("." + dns_zone.name, "")
     client.record_sets.delete(resource_group, dns_zone.name, relative_name, "TXT")
 
 def create_txt_record(client, resource_group, host, value):
@@ -49,7 +49,7 @@ def create_txt_record(client, resource_group, host, value):
         raise ValueError(
             "Unable to find a Azure DNS hosted zone for {}".format(host)
         )
-    relative_name = host.replace(dns_zone.name + ".", "")
+    relative_name = host.replace("." + dns_zone.name, "")
     record = client.record_sets.create_or_update(resource_group, dns_zone.name, relative_name, "TXT", {
         "ttl": 300,
         "txt_records": [
