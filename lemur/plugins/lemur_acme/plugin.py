@@ -102,6 +102,10 @@ def request_certificate(acme_client, authorizations, csr):
         OpenSSL.crypto.FILETYPE_PEM, cert_response.body
     )
 
+    for cert in acme_client.fetch_chain(cert_response):
+        chain_cert = OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
+        current_app.logger.debug("Chain cert: {0}".format(chain_cert))
+
     pem_certificate_chain = "\n".join(
         OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
         for cert in acme_client.fetch_chain(cert_response)
