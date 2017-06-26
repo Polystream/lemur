@@ -86,8 +86,8 @@ def request_certificate(acme_client, authorizations, csr):
     cert_response, _ = acme_client.poll_and_request_issuance(
         jose.util.ComparableX509(
             OpenSSL.crypto.load_certificate_request(
-                OpenSSL.crypto.FILETYPE_ASN1,
-                csr.public_bytes(serialization.Encoding.DER),
+                OpenSSL.crypto.FILETYPE_PEM,
+                csr,
             )
         ),
         authzrs=[authz_record.authz for authz_record in authorizations],
@@ -191,7 +191,6 @@ class ACMEIssuerPlugin(IssuerPlugin):
         :return: :raise Exception:
         """
         current_app.logger.debug("Requesting a new acme certificate: {0}".format(issuer_options))
-        current_app.logger.debug("CSR: {0}".format(csr))
         acme_client, registration = setup_acme_client()
         dns_client = create_dns_client(current_app.config.get('ACME_AZURE_TENANT_ID'), current_app.config.get('ACME_AZURE_CLIENT'), current_app.config.get('ACME_AZURE_KEY'), current_app.config.get('ACME_AZURE_SUBSCRIPTION_ID'))
         domains = get_domains(issuer_options)
@@ -209,5 +208,4 @@ class ACMEIssuerPlugin(IssuerPlugin):
         :return:
         """
         role = {'username': '', 'password': '', 'name': 'acme'}
-        current_app.logger.debug("Creating autority: {0}".format(current_app.config.get('ACME_ROOT')))
         return current_app.config.get('ACME_ROOT'), "", [role]
