@@ -16,6 +16,7 @@ from acme.client import Client
 from acme import jose
 from acme import messages
 from acme import challenges
+from acme import PollError
 
 from lemur.common.utils import generate_private_key
 
@@ -85,15 +86,18 @@ def complete_dns_challenge(acme_client, authz_record):
 def request_certificate(acme_client, authorizations, csr):
     current_app.logger.debug("Auth: {0}".format(authorizations))
 
-    cert_response, _ = acme_client.poll_and_request_issuance(
-        jose.util.ComparableX509(
-            OpenSSL.crypto.load_certificate_request(
-                OpenSSL.crypto.FILETYPE_PEM,
-                csr,
-            )
-        ),
-        authzrs=[authz_record.authz for authz_record in authorizations],
-    )
+    try:
+        cert_response, _ = acme_client.poll_and_request_issuance(
+            jose.util.ComparableX509(
+                OpenSSL.crypto.load_certificate_request(
+                    OpenSSL.crypto.FILETYPE_PEM,
+                    csr,
+                )
+            ),
+            authzrs=[authz_record.authz for authz_record in authorizations],
+        )
+    except PollError as err:
+        current_app.logger.debug("Poll ERROR: {0}".format(err))    
 
     current_app.logger.debug("Got cert_response: {0}".format(cert_response))
 
