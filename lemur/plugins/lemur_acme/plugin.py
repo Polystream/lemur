@@ -99,11 +99,11 @@ def request_certificate(acme_client, authorizations, csr):
         raise
 
     pem_certificate = OpenSSL.crypto.dump_certificate(
-        OpenSSL.crypto.FILETYPE_ASN1, cert_response.body
+        OpenSSL.crypto.FILETYPE_PEM, cert_response.body
     )
 
     pem_certificate_chain = "\n".join(
-        OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_ASN1, cert)
+        OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
         for cert in acme_client.fetch_chain(cert_response)
     )
 
