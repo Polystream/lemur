@@ -97,7 +97,7 @@ def request_certificate(acme_client, authorizations, csr):
             authzrs=[authz_record.authz for authz_record in authorizations],
         )
     except PollError as err:
-        current_app.logger.debug("Poll ERROR: {0}".format(err))    
+        current_app.logger.debug("Poll ERROR: {0}".format(err.__repr__()))
 
     current_app.logger.debug("Got cert_response: {0}".format(cert_response))
 
