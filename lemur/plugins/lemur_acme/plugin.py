@@ -16,7 +16,7 @@ from acme.client import Client
 from acme import jose
 from acme import messages
 from acme import challenges
-from acme import PollError
+from acme.errors import PollError
 
 from lemur.common.utils import generate_private_key
 
