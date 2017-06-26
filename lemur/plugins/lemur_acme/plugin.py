@@ -83,6 +83,8 @@ def complete_dns_challenge(acme_client, authz_record):
 
 
 def request_certificate(acme_client, authorizations, csr):
+    current_app.logger.debug("Auth: {0}".format(authorizations))
+
     cert_response, _ = acme_client.poll_and_request_issuance(
         jose.util.ComparableX509(
             OpenSSL.crypto.load_certificate_request(
