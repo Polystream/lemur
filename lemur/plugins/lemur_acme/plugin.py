@@ -93,6 +93,8 @@ def request_certificate(acme_client, authorizations, csr):
         authzrs=[authz_record.authz for authz_record in authorizations],
     )
 
+    current_app.logger.debug("Got cert_response: {0}".format(cert_response))
+
     pem_certificate = OpenSSL.crypto.dump_certificate(
         OpenSSL.crypto.FILETYPE_PEM, cert_response.body
     )
