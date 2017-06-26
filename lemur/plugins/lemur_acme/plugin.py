@@ -98,14 +98,12 @@ def request_certificate(acme_client, authorizations, csr):
         current_app.logger.debug("Poll ERROR: {0}".format(err.__repr__()))
         raise
 
-    current_app.logger.debug("Got cert_response: {0}".format(cert_response))
-
     pem_certificate = OpenSSL.crypto.dump_certificate(
-        OpenSSL.crypto.FILETYPE_PEM, cert_response.body
+        OpenSSL.crypto.FILETYPE_ASN1, cert_response.body
     )
 
     pem_certificate_chain = "\n".join(
-        OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
+        OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_ASN1, cert)
         for cert in acme_client.fetch_chain(cert_response)
     )
 
@@ -116,7 +114,6 @@ def setup_acme_client():
     email = current_app.config.get('ACME_EMAIL')
     tel = current_app.config.get('ACME_TEL')
     directory_url = current_app.config.get('ACME_DIRECTORY_URL')
-    contact = ('mailto:{}'.format(email), 'tel:{}'.format(tel))
 
     key = jose.JWKRSA(key=generate_private_key('RSA2048'))
 
