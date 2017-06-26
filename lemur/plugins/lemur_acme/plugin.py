@@ -100,7 +100,7 @@ def request_certificate(acme_client, authorizations, csr):
 
     pem_certificate = OpenSSL.crypto.dump_certificate(
         OpenSSL.crypto.FILETYPE_PEM, cert_response.body
-    )
+    ).decode()
 
     pem_certificate_chain = "\n".join(
         OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert).decode()
@@ -200,6 +200,10 @@ class ACMEIssuerPlugin(IssuerPlugin):
         domains = get_domains(issuer_options)
         authorizations = get_authorizations(acme_client, domains, dns_client, current_app.config.get('ACME_AZURE_RESOURCE_GROUP'))
         pem_certificate, pem_certificate_chain = request_certificate(acme_client, authorizations, csr)
+
+
+        current_app.logger.debug("Output certificate: {0} {1}".format(pem_certificate, pem_certificate_chain))
+
         return pem_certificate, pem_certificate_chain
 
     @staticmethod
