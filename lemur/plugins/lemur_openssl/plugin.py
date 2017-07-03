@@ -76,12 +76,12 @@ def create_pkcs12(cert, chain, p12_tmp, key, alias, passphrase):
                 "-password", "pass:{}".format(passphrase)
             ])
 
-def create_pkcs12_public(cert, chain, p12_tmp, alias):
+def create_crt(cert, chain, crt_tmp, alias):
     """
-    Creates a pkcs12 formated file.
+    Creates a crt formated file.
     :param cert:
     :param chain:
-    :param p12_tmp:
+    :param crt_tmp:
     :param alias:
     """
     if isinstance(cert, bytes):
@@ -90,7 +90,6 @@ def create_pkcs12_public(cert, chain, p12_tmp, alias):
     if isinstance(chain, bytes):
         chain = chain.decode('utf-8')
 
-    # Create PKCS12 keystore from private key and public certificate
     with mktempfile() as cert_tmp:
         with open(cert_tmp, 'w') as f:
             if chain:
@@ -100,12 +99,11 @@ def create_pkcs12_public(cert, chain, p12_tmp, alias):
 
         run_process([
             "openssl",
-            "pkcs12",
-            "-export",
-            "-nokeys",
+            "x509",
+            "-outform", "der"
             "-name", alias,
             "-in", cert_tmp,
-            "-out", p12_tmp,
+            "-out", crt_tmp,
         ])
 
 
@@ -123,7 +121,7 @@ class OpenSSLExportPlugin(ExportPlugin):
             'name': 'type',
             'type': 'select',
             'required': True,
-            'available': ['PKCS12 (.p12)', 'PKCS12 Public (.p12)'],
+            'available': ['PKCS12 (.p12)', 'CRT (.crt)'],
             'helpMessage': 'Choose the format you wish to export',
         },
         {
@@ -170,9 +168,9 @@ class OpenSSLExportPlugin(ExportPlugin):
 
                 create_pkcs12(body, chain, output_tmp, key, alias, passphrase)
                 extension = "p12"
-            elif type == 'PKCS12 Public (.p12)':
-                create_pkcs12_public(body, chain, output_tmp, alias)
-                extension = "p12"
+            elif type == 'CRT (.crt)':
+                create_crt(body, chain, output_tmp, alias)
+                extension = "crt"
             else:
                 raise Exception("Unable to export, unsupported type: {0}".format(type))
 
