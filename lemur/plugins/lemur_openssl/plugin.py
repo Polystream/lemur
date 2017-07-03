@@ -76,6 +76,38 @@ def create_pkcs12(cert, chain, p12_tmp, key, alias, passphrase):
                 "-password", "pass:{}".format(passphrase)
             ])
 
+def create_pkcs12_public(cert, chain, p12_tmp, alias):
+    """
+    Creates a pkcs12 formated file.
+    :param cert:
+    :param chain:
+    :param p12_tmp:
+    :param alias:
+    """
+    if isinstance(cert, bytes):
+        cert = cert.decode('utf-8')
+
+    if isinstance(chain, bytes):
+        chain = chain.decode('utf-8')
+
+    # Create PKCS12 keystore from private key and public certificate
+    with mktempfile() as cert_tmp:
+        with open(cert_tmp, 'w') as f:
+            if chain:
+                f.writelines([cert.strip() + "\n", chain.strip() + "\n"])
+            else:
+                f.writelines([cert.strip() + "\n"])
+
+        run_process([
+            "openssl",
+            "pkcs12",
+            "-export",
+            "-nokeys",
+            "-name", alias,
+            "-in", cert_tmp,
+            "-out", p12_tmp,
+        ])
+
 
 class OpenSSLExportPlugin(ExportPlugin):
     title = 'OpenSSL'
@@ -91,7 +123,7 @@ class OpenSSLExportPlugin(ExportPlugin):
             'name': 'type',
             'type': 'select',
             'required': True,
-            'available': ['PKCS12 (.p12)'],
+            'available': ['PKCS12 (.p12)', 'PKCS12 Public (.p12)'],
             'helpMessage': 'Choose the format you wish to export',
         },
         {
@@ -137,6 +169,9 @@ class OpenSSLExportPlugin(ExportPlugin):
                     raise Exception("Private Key required by {0}".format(type))
 
                 create_pkcs12(body, chain, output_tmp, key, alias, passphrase)
+                extension = "p12"
+            else if type == 'PKCS12 Public (.p12)':
+                create_pkcs12_public(body, chain, output_tmp, alias)
                 extension = "p12"
             else:
                 raise Exception("Unable to export, unsupported type: {0}".format(type))
