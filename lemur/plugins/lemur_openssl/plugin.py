@@ -170,7 +170,7 @@ class OpenSSLExportPlugin(ExportPlugin):
 
                 create_pkcs12(body, chain, output_tmp, key, alias, passphrase)
                 extension = "p12"
-            else if type == 'PKCS12 Public (.p12)':
+            elif type == 'PKCS12 Public (.p12)':
                 create_pkcs12_public(body, chain, output_tmp, alias)
                 extension = "p12"
             else:
