@@ -99,7 +99,7 @@ def create_crt(cert, chain, crt_tmp):
         run_process([
             "openssl",
             "x509",
-            "-outform der",
+            "-outform", "der",
             "-in", cert_tmp,
             "-out", crt_tmp,
         ])
