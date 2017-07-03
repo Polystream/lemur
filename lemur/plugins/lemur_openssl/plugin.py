@@ -76,13 +76,12 @@ def create_pkcs12(cert, chain, p12_tmp, key, alias, passphrase):
                 "-password", "pass:{}".format(passphrase)
             ])
 
-def create_crt(cert, chain, crt_tmp, alias):
+def create_crt(cert, chain, crt_tmp):
     """
     Creates a crt formated file.
     :param cert:
     :param chain:
     :param crt_tmp:
-    :param alias:
     """
     if isinstance(cert, bytes):
         cert = cert.decode('utf-8')
@@ -101,7 +100,6 @@ def create_crt(cert, chain, crt_tmp, alias):
             "openssl",
             "x509",
             "-outform der",
-            "-name", alias,
             "-in", cert_tmp,
             "-out", crt_tmp,
         ])
@@ -149,16 +147,8 @@ class OpenSSLExportPlugin(ExportPlugin):
         :param options:
         :param kwargs:
         """
-        if self.get_option('passphrase', options):
-            passphrase = self.get_option('passphrase', options)
-        else:
-            passphrase = get_psuedo_random_string()
-
-        if self.get_option('alias', options):
-            alias = self.get_option('alias', options)
-        else:
-            alias = "blah"
-
+        passphrase = ""
+        
         type = self.get_option('type', options)
 
         with mktemppath() as output_tmp:
@@ -166,10 +156,20 @@ class OpenSSLExportPlugin(ExportPlugin):
                 if not key:
                     raise Exception("Private Key required by {0}".format(type))
 
+                if self.get_option('passphrase', options):
+                    passphrase = self.get_option('passphrase', options)
+                else:
+                    passphrase = get_psuedo_random_string()
+
+                if self.get_option('alias', options):
+                    alias = self.get_option('alias', options)
+                else:
+                    alias = "blah"
+
                 create_pkcs12(body, chain, output_tmp, key, alias, passphrase)
                 extension = "p12"
             elif type == 'CRT (.crt)':
-                create_crt(body, chain, output_tmp, alias)
+                create_crt(body, chain, output_tmp)
                 extension = "crt"
             else:
                 raise Exception("Unable to export, unsupported type: {0}".format(type))
